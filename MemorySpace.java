@@ -76,22 +76,17 @@ public class MemorySpace {
 					freeBlock.length -= length; 
 				} else {
 					if (previous == null) {
-						freeList.getFirst().block = freeList.getFirst().next.block;
-						freeList.getFirst().next = freeList.getFirst().next.next;
-						if (freeList.getFirst().next == null) {
-							freeList = new LinkedList();  
-						}
+						freeList.remove(0); 
 					} else {
-						previous.next = current.next;
+						previous.next = current.next; 
 						if (current.next == null) {
-							previous.next = null;  
+							previous.next = null; 
 						}
 					}
 				}
 	
 				MemoryBlock allocatedBlock = new MemoryBlock(allocatedBaseAddress, length);
 				allocatedList.addLast(allocatedBlock);
-	
 				return allocatedBaseAddress;
 			}
 	
@@ -127,7 +122,7 @@ public class MemorySpace {
 				} else {
 					previous.next = current.next;
 					if (current.next == null) {
-						allocatedList.getLast().block = previous.block;
+						previous.next = null; 
 					}
 				}
 	
@@ -159,6 +154,7 @@ public class MemorySpace {
 		if (freeList.getFirst() == null || freeList.getFirst().next == null) {
 			return;
 		}
+	
 		boolean swapped = true;
 		while (swapped) {
 			swapped = false;
@@ -168,7 +164,7 @@ public class MemorySpace {
 					MemoryBlock temp = current.block;
 					current.block = current.next.block;
 					current.next.block = temp;
-					swapped = true;  
+					swapped = true;
 				}
 				current = current.next;
 			}
@@ -180,8 +176,8 @@ public class MemorySpace {
 			MemoryBlock nextBlock = current.next.block;
 	
 			if (currentBlock.baseAddress + currentBlock.length == nextBlock.baseAddress) {
-				currentBlock.length += nextBlock.length;  
-				current.next = current.next.next;  
+				currentBlock.length += nextBlock.length;
+				current.next = current.next.next;
 			} else {
 				current = current.next;
 			}
