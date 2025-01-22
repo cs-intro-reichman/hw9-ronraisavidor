@@ -58,7 +58,6 @@ public class MemorySpace {
 	 * @return the base address of the allocated block, or -1 if unable to allocate
 	 */
 	public int malloc(int length) {		
-		//// Replace the following statement with your code
 		if (length <= 0) {
 			return -1;
 		}
@@ -76,12 +75,23 @@ public class MemorySpace {
 					freeBlock.baseAddress += length; 
 					freeBlock.length -= length; 
 				} else {
-					freeList.remove(current.block);
+					if (previous == null) {
+						freeList.getFirst().block = freeList.getFirst().next.block;
+						freeList.getFirst().next = freeList.getFirst().next.next;
+						if (freeList.getFirst().next == null) {
+							freeList = new LinkedList();  
+						}
+					} else {
+						previous.next = current.next;
+						if (current.next == null) {
+							previous.next = null;  
+						}
+					}
 				}
 	
 				MemoryBlock allocatedBlock = new MemoryBlock(allocatedBaseAddress, length);
 				allocatedList.addLast(allocatedBlock);
-				
+	
 				return allocatedBaseAddress;
 			}
 	
@@ -101,31 +111,35 @@ public class MemorySpace {
 	 *            the starting address of the block to freeList
 	 */
 	public void free(int address) {
-		//// Write your code here
+		if (allocatedList.getFirst() == null) {
+			throw new IllegalArgumentException("index must be between 0 and size");
+		}
+	
 		Node current = allocatedList.getFirst();
-    Node previous = null;
-
-    while (current != null) {
-        MemoryBlock allocatedBlock = current.block;
-        
-        if (allocatedBlock.baseAddress == address) {
-            if (previous == null) {
-                allocatedList.remove(current.block);
-            } else {
-                previous.next = current.next;
-                if (current.next == null) {
-                    allocatedList.remove(current.block);
-                }
-            }
-            freeList.addLast(allocatedBlock);
-            return;
-        }
-
-        previous = current;
-        current = current.next;
-    }
-
-		throw new IllegalArgumentException("Memory block with address " + address + " not found in allocated list.");
+		Node previous = null;
+	
+		while (current != null) {
+			MemoryBlock allocatedBlock = current.block;
+	
+			if (allocatedBlock.baseAddress == address) {
+				if (previous == null) {
+					allocatedList.remove(0);
+				} else {
+					previous.next = current.next;
+					if (current.next == null) {
+						allocatedList.getLast().block = previous.block;
+					}
+				}
+	
+				freeList.addLast(allocatedBlock);
+				return;
+			}
+	
+			previous = current;
+			current = current.next;
+		}
+	
+		throw new IllegalArgumentException("index must be between 0 and size");
 	}
 	
 	/**
@@ -145,32 +159,29 @@ public class MemorySpace {
 		if (freeList.getFirst() == null || freeList.getFirst().next == null) {
 			return;
 		}
-	
 		boolean swapped = true;
-
-    	while (swapped) {
-        swapped = false;
-        Node current = freeList.getFirst();
-        while (current != null && current.next != null) {
-            if (current.block.baseAddress > current.next.block.baseAddress) {
-                MemoryBlock temp = current.block;
-                current.block = current.next.block;
-                current.next.block = temp;
-                swapped = true;
-            }
-            current = current.next;
-        }
-    }
-
+		while (swapped) {
+			swapped = false;
+			Node current = freeList.getFirst();
+			while (current != null && current.next != null) {
+				if (current.block.baseAddress > current.next.block.baseAddress) {
+					MemoryBlock temp = current.block;
+					current.block = current.next.block;
+					current.next.block = temp;
+					swapped = true;  
+				}
+				current = current.next;
+			}
+		}
+	
 		Node current = freeList.getFirst();
-
 		while (current != null && current.next != null) {
 			MemoryBlock currentBlock = current.block;
 			MemoryBlock nextBlock = current.next.block;
-
+	
 			if (currentBlock.baseAddress + currentBlock.length == nextBlock.baseAddress) {
-				currentBlock.length += nextBlock.length;
-				freeList.remove(nextBlock);
+				currentBlock.length += nextBlock.length;  
+				current.next = current.next.next;  
 			} else {
 				current = current.next;
 			}
