@@ -59,6 +59,36 @@ public class MemorySpace {
 	 */
 	public int malloc(int length) {		
 		//// Replace the following statement with your code
+		if (length <= 0) {
+			return -1;
+		}
+	
+		Node current = freeList.getFirst();
+		Node previous = null;
+	
+		while (current != null) {
+			MemoryBlock freeBlock = current.block;
+	
+			if (freeBlock.length >= length) {
+				int allocatedBaseAddress = freeBlock.baseAddress;
+	
+				if (freeBlock.length > length) {
+					freeBlock.baseAddress += length; 
+					freeBlock.length -= length; 
+				} else {
+					freeList.remove(current.block);
+				}
+	
+				MemoryBlock allocatedBlock = new MemoryBlock(allocatedBaseAddress, length);
+				allocatedList.addLast(allocatedBlock);
+				
+				return allocatedBaseAddress;
+			}
+	
+			previous = current;
+			current = current.next;
+		}
+	
 		return -1;
 	}
 
@@ -72,6 +102,30 @@ public class MemorySpace {
 	 */
 	public void free(int address) {
 		//// Write your code here
+		Node current = allocatedList.getFirst();
+    Node previous = null;
+
+    while (current != null) {
+        MemoryBlock allocatedBlock = current.block;
+        
+        if (allocatedBlock.baseAddress == address) {
+            if (previous == null) {
+                allocatedList.remove(current.block);
+            } else {
+                previous.next = current.next;
+                if (current.next == null) {
+                    allocatedList.remove(current.block);
+                }
+            }
+            freeList.addLast(allocatedBlock);
+            return;
+        }
+
+        previous = current;
+        current = current.next;
+    }
+
+		throw new IllegalArgumentException("Memory block with address " + address + " not found in allocated list.");
 	}
 	
 	/**
@@ -88,7 +142,38 @@ public class MemorySpace {
 	 * In this implementation Malloc does not call defrag.
 	 */
 	public void defrag() {
-		/// TODO: Implement defrag test
-		//// Write your code here
+		if (freeList.getFirst() == null || freeList.getFirst().next == null) {
+			return;
+		}
+	
+		boolean swapped = true;
+
+    	while (swapped) {
+        swapped = false;
+        Node current = freeList.getFirst();
+        while (current != null && current.next != null) {
+            if (current.block.baseAddress > current.next.block.baseAddress) {
+                MemoryBlock temp = current.block;
+                current.block = current.next.block;
+                current.next.block = temp;
+                swapped = true;
+            }
+            current = current.next;
+        }
+    }
+
+		Node current = freeList.getFirst();
+
+		while (current != null && current.next != null) {
+			MemoryBlock currentBlock = current.block;
+			MemoryBlock nextBlock = current.next.block;
+
+			if (currentBlock.baseAddress + currentBlock.length == nextBlock.baseAddress) {
+				currentBlock.length += nextBlock.length;
+				freeList.remove(nextBlock);
+			} else {
+				current = current.next;
+			}
+		}
 	}
 }
