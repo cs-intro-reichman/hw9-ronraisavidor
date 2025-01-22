@@ -55,7 +55,11 @@ public class LinkedList {
 					"index must be between 0 and size");
 		}
 		//// Replace the following statement with your code
-		return null;
+		Node current = first;
+    	for (int i = 0; i < index; i++) {
+        	current = current.next;
+    	}
+    	return current;
 	}
 	
 	/**
@@ -83,31 +87,23 @@ public class LinkedList {
 			throw new IllegalArgumentException("Index out of bounds: " + index);
 		}
 
-		Node addNode = new Node(block);
-
 		if (index == 0) {
-			addNode.next = first;
-			first = addNode;
-			if (size == 0) {
-				last = addNode;
-			}
+			addFirst(block);
+			return;
 		}
-		else if (index == size) {
-			if (last != null) {
-				last.next = addNode;
-			} else {
-				first = addNode;
-			}
-			last = addNode;
-		} 
-		else {
-			Node current = first;
-			for (int i = 0; i < index - 1; i++) {
-				current = current.next;
-			}
-			addNode.next = current.next;
-			current.next = addNode;
+		
+		if (index == size) {
+			addLast(block);
+			return;
 		}
+
+		Node addNode = new Node(block);
+		Node current = first;
+		for (int i = 0; i < index - 1; i++) {
+			current = current.next;
+		}
+		addNode.next = current.next;
+		current.next = addNode;
 
 		this.size++;		
 	}
@@ -214,7 +210,7 @@ public class LinkedList {
 			return;
 		}
 
-		if (first == node) {
+		if (first.equals(node)) {
 			first = first.next;
 			if (first == null) {
 				last = null;
@@ -226,15 +222,16 @@ public class LinkedList {
 		Node current = first;
 		while (current.next != null) {
 			if (current.next.equals(node)) {
-				current.next = current.next.next;
-				if (current.next == null) {
+				if (current.next.next == null) {
 					last = current;
 				}
+				current.next = current.next.next;
 				size--;
 				return;
 			}
 			current = current.next;
 		}
+		throw new IllegalArgumentException("Node not found in the list");
 	}
 
 	/**
@@ -264,12 +261,12 @@ public class LinkedList {
 			current = current.next;
 		}
 
-		current.next = current.next.next;
-
-		if (current.next == null) {
+		
+		if (current.next.next == null) {
 			last = current;
 		}
-
+		
+		current.next = current.next.next;
 		size--;
 	}
 
@@ -298,10 +295,10 @@ public class LinkedList {
 		Node current = first;
 		while (current != null && current.next != null) {
 			if (current.next.block.equals(block)) {
-				current.next = current.next.next;
-				if (current.next == null) {
+				if (current.next.next == null) {
 					last = current;
 				}
+				current.next = current.next.next;
 				size--;	
 				return;
 			}
