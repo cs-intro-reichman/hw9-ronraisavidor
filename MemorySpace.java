@@ -61,6 +61,9 @@ public class MemorySpace {
 		if (length <= 0) {
 			return -1;
 		}
+
+		
+
 	
 		Node current = freeList.getFirst();
 		Node previous = null;
@@ -87,12 +90,17 @@ public class MemorySpace {
 	
 				MemoryBlock allocatedBlock = new MemoryBlock(allocatedBaseAddress, length);
 				allocatedList.addLast(allocatedBlock);
+
+				
+	
+
 				return allocatedBaseAddress;
 			}
 	
 			previous = current;
 			current = current.next;
 		}
+
 		
 		return -1;
 	}

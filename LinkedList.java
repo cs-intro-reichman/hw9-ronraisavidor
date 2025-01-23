@@ -326,7 +326,7 @@ public class LinkedList {
 		while (current != null) {
 			result += current.block.toString();
 			if (current.next != null) {
-				result += ", ";
+				result += " ";
 			}
 
 			current = current.next;
