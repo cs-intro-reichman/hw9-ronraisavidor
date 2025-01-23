@@ -61,10 +61,7 @@ public class MemorySpace {
 		if (length <= 0) {
 			return -1;
 		}
-		System.out.println("Before malloc(" + length + ")");
-		System.out.println("Free List: " + freeList.toString());
-		System.out.println("Allocated List: " + allocatedList.toString());
-
+		
 	
 		Node current = freeList.getFirst();
 		Node previous = null;
@@ -76,12 +73,10 @@ public class MemorySpace {
 				int allocatedBaseAddress = freeBlock.baseAddress;
 	
 				if (freeBlock.length > length) {
-					System.out.println("Allocating partial block: " + allocatedBaseAddress + " size: " + length);
 
 					freeBlock.baseAddress += length; 
 					freeBlock.length -= length; 
 				} else {
-					System.out.println("Allocating entire block: " + allocatedBaseAddress);
 
 					if (previous == null) {
 						freeList.remove(0); 
@@ -97,9 +92,7 @@ public class MemorySpace {
 				allocatedList.addLast(allocatedBlock);
 
 				
-				System.out.println("After malloc(" + length + ")");
-				System.out.println("Free List: " + freeList.toString());
-				System.out.println("Allocated List: " + allocatedList.toString());
+				
 
 				return allocatedBaseAddress;
 			}
