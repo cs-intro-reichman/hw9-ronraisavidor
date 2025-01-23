@@ -318,10 +318,10 @@ public class LinkedList {
 	public String toString() {
 		//// Replace the following statement with your code
 		if (first == null) {
-			return "[]";
+			return "";
 		}
 
-		String result = "[";
+		String result = "";
 		Node current = first;
 		while (current != null) {
 			result += current.block.toString();
@@ -331,8 +331,6 @@ public class LinkedList {
 
 			current = current.next;
 		}
-
-		result += "]";
 		return result;
 	}
 }

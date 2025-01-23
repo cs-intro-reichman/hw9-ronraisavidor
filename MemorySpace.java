@@ -80,7 +80,7 @@ public class MemorySpace {
 					} else {
 						previous.next = current.next; 
 						if (current.next == null) {
-							previous.next = null; 
+							freeList.getLast().block = previous.block; 
 						}
 					}
 				}
@@ -93,7 +93,7 @@ public class MemorySpace {
 			previous = current;
 			current = current.next;
 		}
-	
+		
 		return -1;
 	}
 
@@ -141,7 +141,8 @@ public class MemorySpace {
 	 * A textual representation of the free list and the allocated list of this memory space, 
 	 * for debugging purposes.
 	 */
-	public String toString() {
+	public String toString() 
+	{
 		return freeList.toString() + "\n" + allocatedList.toString();		
 	}
 	
