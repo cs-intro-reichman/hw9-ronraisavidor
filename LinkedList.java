@@ -316,21 +316,12 @@ public class LinkedList {
 	 * A textual representation of this list, for debugging.
 	 */
 	public String toString() {
-		//// Replace the following statement with your code
-		if (first == null) {
-			return "";
+		ListIterator itr = this.iterator();
+		String str = "";
+		while (itr.hasNext()) {
+			str += "(" + itr.current.block.baseAddress + " , " + itr.current.block.length + ") ";
+			itr.next();
 		}
-
-		String result = "";
-		Node current = first;
-		while (current != null) {
-			result += current.block.toString();
-			if (current.next != null) {
-				result += " ";
-			}
-
-			current = current.next;
-		}
-		return result;
+		return str;
 	}
 }

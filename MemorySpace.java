@@ -57,51 +57,49 @@ public class MemorySpace {
 	 *        the length (in words) of the memory block that has to be allocated
 	 * @return the base address of the allocated block, or -1 if unable to allocate
 	 */
-	public int malloc(int length) {		
+	public int malloc(int length) {
+		// Edge case: if length is 0, return -1
 		if (length <= 0) {
 			return -1;
 		}
-		
 	
-		Node current = freeList.getFirst();
-		Node previous = null;
+		// Traverse through the free list to find the first suitable block
+		Node currentNode = freeList.getFirst(); // Start from the first node in the free list
+		while (currentNode != null) {
+			MemoryBlock freeBlock = currentNode.block;
 	
-		while (current != null) {
-			MemoryBlock freeBlock = current.block;
-	
+			// Check if the free block has enough space
 			if (freeBlock.length >= length) {
-				int allocatedBaseAddress = freeBlock.baseAddress;
+				// If the free block's length is exactly the requested size
+				if (freeBlock.length == length) {
+					// Remove this block from the free list
+					freeList.remove(currentNode.block);
 	
-				if (freeBlock.length > length) {
-
-					freeBlock.baseAddress += length; 
-					freeBlock.length -= length; 
+					// Add it to the allocated list
+					allocatedList.addLast(new MemoryBlock(freeBlock.baseAddress, freeBlock.length));
+	
+					// Return the base address of the allocated block
+					return freeBlock.baseAddress;
 				} else {
-
-					if (previous == null) {
-						freeList.remove(0); 
-					} else {
-						previous.next = current.next; 
-						if (current.next == null) {
-							freeList.getLast().block = previous.block; 
-						}
-					}
-				}
+					// If the free block's length is larger than the requested size
+					// Create a new memory block of the requested size
+					MemoryBlock allocatedBlock = new MemoryBlock(freeBlock.baseAddress, length);
+					allocatedList.addLast(allocatedBlock); // Add it to the allocated list
 	
-				MemoryBlock allocatedBlock = new MemoryBlock(allocatedBaseAddress, length);
-				allocatedList.addLast(allocatedBlock);
-
-				
-				
-
-				return allocatedBaseAddress;
+					// Update the free block; reduce its size and change its base address
+					freeBlock.baseAddress += length;  // Move the base address forward
+					freeBlock.length -= length;       // Reduce the size of the free block
+	
+					// Return the base address of the allocated block
+					return allocatedBlock.baseAddress;
+				}
 			}
 	
-			previous = current;
-			current = current.next;
+			// Move to the next free block in the list
+			currentNode = currentNode.next;
 		}
-
-		
+	
+		// If no suitable block is found, return -1 (allocation failed)
 		return -1;
 	}
 
@@ -114,35 +112,34 @@ public class MemorySpace {
 	 *            the starting address of the block to freeList
 	 */
 	public void free(int address) {
-		if (allocatedList.getFirst() == null) {
+
+		if (allocatedList.getSize() == 0) {
 			throw new IllegalArgumentException("index must be between 0 and size");
 		}
 	
-		Node current = allocatedList.getFirst();
-		Node previous = null;
+		// Find the block in the allocatedList with the given base address
+		Node currentNode = allocatedList.getFirst();
+		Node blockToFree = null;
 	
-		while (current != null) {
-			MemoryBlock allocatedBlock = current.block;
-	
-			if (allocatedBlock.baseAddress == address) {
-				if (previous == null) {
-					allocatedList.remove(0);
-				} else {
-					previous.next = current.next;
-					if (current.next == null) {
-						previous.next = null; 
-					}
-				}
-	
-				freeList.addLast(allocatedBlock);
-				return;
+		// Traverse the allocated list to find the block
+		while (currentNode != null) {
+			if (currentNode.block.baseAddress == address) {
+				blockToFree = currentNode;  // Found the block
+				break;
 			}
-	
-			previous = current;
-			current = current.next;
+			currentNode = currentNode.next;  // Move to the next node in the list
 		}
 	
-		throw new IllegalArgumentException("index must be between 0 and size");
+		// If no block with the given address was found in allocatedList, just return (no-op)
+		if (blockToFree == null) {
+			return;  // Ignore the invalid free request, no exception
+		}
+	
+		// Remove the block from the allocatedList
+		allocatedList.remove(blockToFree.block);
+	
+		// Add the block to the freeList
+		freeList.addLast(blockToFree.block);
 	}
 	
 	/**
@@ -160,36 +157,39 @@ public class MemorySpace {
 	 * In this implementation Malloc does not call defrag.
 	 */
 	public void defrag() {
-		if (freeList.getFirst() == null || freeList.getFirst().next == null) {
-			return;
-		}
+		// Start from the first node in the free list
+		Node currentNode = freeList.getFirst();
+		boolean flag = true;
+		boolean flag2 = true;
 	
-		boolean swapped = true;
-		while (swapped) {
-			swapped = false;
-			Node current = freeList.getFirst();
-			while (current != null && current.next != null) {
-				if (current.block.baseAddress > current.next.block.baseAddress) {
-					MemoryBlock temp = current.block;
-					current.block = current.next.block;
-					current.next.block = temp;
-					swapped = true;
+		while (currentNode != null) {
+			Node runner = freeList.getFirst();
+			while (runner != null) {
+	
+				// Check if the current block and the next block are adjacent
+				if (currentNode.block.baseAddress + currentNode.block.length == runner.block.baseAddress) {
+					// Merge the blocks
+					currentNode.block.length += runner.block.length;
+	
+					// Remove the next node from the free list (since it has been merged)
+					Node newRemove = runner;
+					runner = runner.next;
+					freeList.remove(newRemove.block);
+					flag = false;
+					flag2 = false;
 				}
-				current = current.next;
-			}
-		}
 	
-		Node current = freeList.getFirst();
-		while (current != null && current.next != null) {
-			MemoryBlock currentBlock = current.block;
-			MemoryBlock nextBlock = current.next.block;
-	
-			if (currentBlock.baseAddress + currentBlock.length == nextBlock.baseAddress) {
-				currentBlock.length += nextBlock.length;
-				current.next = current.next.next;
-			} else {
-				current = current.next;
+				if (flag2) {
+					runner = runner.next;
+				}
+				flag2 = true;
 			}
+	
+			if (flag) {
+				currentNode = currentNode.next;
+			}
+			flag = true;
 		}
+		
 	}
 }
